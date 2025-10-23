@@ -2,7 +2,7 @@ import express from 'express';
 import puppeteer from 'puppeteer';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 10000;
 
 app.get('/health', (req, res) => {
     res.status(200).send('OK');
@@ -10,18 +10,19 @@ app.get('/health', (req, res) => {
 
 app.get('/screenshot', async (req, res) => {
     const { url } = req.query;
-
-    if (!url) {
-        return res.status(400).json({ error: 'URL parameter required' });
-    }
+    if (!url) return res.status(400).json({ error: 'URL parameter required' });
 
     try {
         const browser = await puppeteer.launch({
             headless: 'new',
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--single-process',
+                '--no-zygote'
+            ]
         });
-
-
 
         const page = await browser.newPage();
         await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
