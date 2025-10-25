@@ -4,6 +4,13 @@ import puppeteer from 'puppeteer';
 const app = express();
 const PORT = process.env.PORT || 10000;
 
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+});
+
 app.get('/health', (req, res) => {
     res.status(200).send('OK');
 });
@@ -15,7 +22,6 @@ app.get('/screenshot', async (req, res) => {
     try {
         const browser = await puppeteer.launch({
             headless: 'new',
-            executablePath: puppeteer.executablePath(),
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
@@ -30,8 +36,6 @@ app.get('/screenshot', async (req, res) => {
         await page.waitForSelector('.ArborCard', { timeout: 10000 });
 
         const element = await page.$('.ArborCard');
-        if (!element) throw new Error('Element not found');
-
         const screenshot = await element.screenshot({ type: 'png' });
 
         await browser.close();
