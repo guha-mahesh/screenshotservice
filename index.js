@@ -3,18 +3,28 @@ import puppeteer from 'puppeteer';
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-let persistentBrowser;
+let persistentBrowser = null;
+let isBrowserReady = false;
 
 async function initializeBrowser() {
-    persistentBrowser = await puppeteer.launch({
-        headless: 'new',
-        args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--no-zygote'
-        ]
-    });
+    try {
+        const browser = await puppeteer.launch({
+            headless: 'new',
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--no-zygote'
+            ]
+        });
+        persistentBrowser = browser;
+        isBrowserReady = true;
+        console.log('Persistent browser ready.');
+    } catch (error) {
+        console.error('Failed to launch browser:', error);
+
+        throw error;
+    }
 }
 
 app.use((req, res, next) => {
@@ -24,16 +34,24 @@ app.use((req, res, next) => {
     next();
 });
 
+
 app.get('/health', (req, res) => {
-    res.status(200).send('OK');
+
+    if (isBrowserReady) {
+        res.status(200).send('OK - Browser Ready');
+    } else {
+
+        res.status(503).send('Not Ready - Browser Initializing');
+    }
 });
 
 app.get('/screenshot', async (req, res) => {
     const { url } = req.query;
     if (!url) return res.status(400).json({ error: 'URL parameter required' });
 
-    if (!persistentBrowser) {
-        return res.status(503).json({ error: 'Browser service initializing' });
+    if (!isBrowserReady || !persistentBrowser) {
+
+        return res.status(503).json({ error: 'Browser service initializing. Try again shortly.' });
     }
 
     let page;
@@ -89,8 +107,9 @@ app.get('/screenshot', async (req, res) => {
     }
 });
 
-initializeBrowser().then(() => {
-    app.listen(PORT, () => {
-        console.log(`Screenshot service running on port ${PORT}`);
-    });
+
+app.listen(PORT, () => {
+    console.log(`Express server listening on port ${PORT}`);
+
+    initializeBrowser();
 });
