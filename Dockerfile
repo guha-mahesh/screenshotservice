@@ -1,17 +1,14 @@
-FROM node:20-slim
-
-RUN apt-get update && apt-get install -y \
-    chromium \
-    --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
+FROM ghcr.io/puppeteer/puppeteer:21.0.0
 
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --only=production
+
+RUN npm i
+
+
+RUN echo "Force rebuild $(date)" && npm uninstall puppeteer-core
 
 COPY . .
-
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 CMD ["node", "index.js"]
