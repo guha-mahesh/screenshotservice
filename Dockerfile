@@ -6,7 +6,8 @@ COPY package*.json ./
 
 RUN npm i
 
-RUN npm uninstall puppeteer-core
+
+RUN echo "Force rebuild $(date)" && npm uninstall puppeteer-core
 
 COPY . .
 
