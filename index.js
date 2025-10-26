@@ -62,7 +62,7 @@ app.get('/screenshot', async (req, res) => {
                     return true;
                 }
             });
-        }, { timeout: 10000 }).catch(() => console.log('Iframe timeout, continuing...'));
+        }, { timeout: 20000 }).catch(() => console.log('Iframe timeout, continuing...'));
 
         await new Promise(resolve => setTimeout(resolve, 2000));
 
