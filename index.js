@@ -19,8 +19,9 @@ app.get('/screenshot', async (req, res) => {
     const { url } = req.query;
     if (!url) return res.status(400).json({ error: 'URL parameter required' });
 
+    let browser;
     try {
-        const browser = await puppeteer.launch({
+        browser = await puppeteer.launch({
             headless: 'new',
             args: [
                 '--no-sandbox',
@@ -42,6 +43,29 @@ app.get('/screenshot', async (req, res) => {
         await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
         await page.waitForSelector('.ArborCard', { timeout: 10000 });
 
+        await page.evaluate(() => {
+            return Promise.all(
+                Array.from(document.images)
+                    .filter(img => !img.complete)
+                    .map(img => new Promise(resolve => {
+                        img.onload = img.onerror = resolve;
+                    }))
+            );
+        });
+
+        await page.waitForFunction(() => {
+            const iframes = document.querySelectorAll('iframe');
+            return Array.from(iframes).every(iframe => {
+                try {
+                    return iframe.contentDocument?.readyState === 'complete';
+                } catch {
+                    return true;
+                }
+            });
+        }, { timeout: 5000 }).catch(() => console.log('Iframe timeout, continuing...'));
+
+        await page.waitForTimeout(2000);
+
         const element = await page.$('.ArborCard');
         const screenshot = await element.screenshot({
             type: 'png',
@@ -55,6 +79,7 @@ app.get('/screenshot', async (req, res) => {
 
     } catch (error) {
         console.error('Screenshot error:', error);
+        if (browser) await browser.close();
         res.status(500).json({ error: 'Failed to generate screenshot' });
     }
 });
