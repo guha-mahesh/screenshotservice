@@ -62,9 +62,10 @@ app.get('/screenshot', async (req, res) => {
                     return true;
                 }
             });
-        }, { timeout: 5000 }).catch(() => console.log('Iframe timeout, continuing...'));
+        }, { timeout: 10000 }).catch(() => console.log('Iframe timeout, continuing...'));
 
-        await page.waitForTimeout(2000);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
 
         const element = await page.$('.ArborCard');
         const screenshot = await element.screenshot({
