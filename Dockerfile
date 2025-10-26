@@ -1,14 +1,19 @@
 FROM ghcr.io/puppeteer/puppeteer:21.0.0
 
+
+ENV NODE_ENV production
+
+
 WORKDIR /app
 
-COPY package*.json ./
-
-RUN npm i
 
 
-RUN echo "Force rebuild $(date)" && npm uninstall puppeteer-core
+
+COPY package.json ./
+RUN npm install --only=production
+
 
 COPY . .
+
 
 CMD ["node", "index.js"]

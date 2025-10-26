@@ -3,6 +3,19 @@ import puppeteer from 'puppeteer';
 
 const app = express();
 const PORT = process.env.PORT || 10000;
+let persistentBrowser;
+
+async function initializeBrowser() {
+    persistentBrowser = await puppeteer.launch({
+        headless: 'new',
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--no-zygote'
+        ]
+    });
+}
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
@@ -19,20 +32,13 @@ app.get('/screenshot', async (req, res) => {
     const { url } = req.query;
     if (!url) return res.status(400).json({ error: 'URL parameter required' });
 
-    let browser;
-    try {
-        browser = await puppeteer.launch({
-            headless: 'new',
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--single-process',
-                '--no-zygote'
-            ]
-        });
+    if (!persistentBrowser) {
+        return res.status(503).json({ error: 'Browser service initializing' });
+    }
 
-        const page = await browser.newPage();
+    let page;
+    try {
+        page = await persistentBrowser.newPage();
 
         await page.setViewport({
             width: 1920,
@@ -66,25 +72,25 @@ app.get('/screenshot', async (req, res) => {
 
         await new Promise(resolve => setTimeout(resolve, 2000));
 
-
         const element = await page.$('.ArborCard');
         const screenshot = await element.screenshot({
             type: 'png',
             omitBackground: true
         });
 
-        await browser.close();
-
         res.set('Content-Type', 'image/png');
         res.send(screenshot);
 
     } catch (error) {
         console.error('Screenshot error:', error);
-        if (browser) await browser.close();
         res.status(500).json({ error: 'Failed to generate screenshot' });
+    } finally {
+        if (page) await page.close();
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Screenshot service running on port ${PORT}`);
+initializeBrowser().then(() => {
+    app.listen(PORT, () => {
+        console.log(`Screenshot service running on port ${PORT}`);
+    });
 });
