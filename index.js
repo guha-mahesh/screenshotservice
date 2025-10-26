@@ -32,11 +32,21 @@ app.get('/screenshot', async (req, res) => {
         });
 
         const page = await browser.newPage();
+
+        await page.setViewport({
+            width: 1920,
+            height: 1080,
+            deviceScaleFactor: 2
+        });
+
         await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
         await page.waitForSelector('.ArborCard', { timeout: 10000 });
 
         const element = await page.$('.ArborCard');
-        const screenshot = await element.screenshot({ type: 'png' });
+        const screenshot = await element.screenshot({
+            type: 'png',
+            omitBackground: true
+        });
 
         await browser.close();
 
