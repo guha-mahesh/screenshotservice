@@ -1,5 +1,6 @@
 import express from 'express';
 import puppeteer from 'puppeteer';
+import { execSync } from 'child_process';
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -10,34 +11,49 @@ async function initializeBrowser() {
     try {
         console.log('=== CHECKING FOR CHROME ===');
         try {
-            const result = execSync('ls -la /home/pptruser/.cache/puppeteer/ 2>&1 || echo "cache not found"').toString();
-            console.log('Puppeteer cache:', result);
+            const result = execSync('which google-chrome || which google-chrome-stable').toString();
+            console.log('Chrome location:', result);
         } catch (e) {
-            console.log('Cache check failed:', e.message);
+            console.log('Chrome check failed:', e.message);
         }
 
         console.log('=== LAUNCHING BROWSER ===');
         const browser = await puppeteer.launch({
             headless: 'new',
-            executablePath: '/usr/bin/google-chrome',
-            dumpio: true,  // ADD THIS
+            executablePath: '/usr/bin/google-chrome-stable',
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--no-first-run',
+                '--no-zygote',
                 '--disable-gpu',
-                '--single-process',  // Critical for Cloud Run
+                '--disable-dev-tools',
                 '--disable-software-rasterizer',
-                '--disable-dev-tools'
+                '--disable-extensions'
             ],
-            timeout: 60000
+            timeout: 90000
         });
+
+        console.log('✓ Browser launched successfully');
         persistentBrowser = browser;
         isBrowserReady = true;
-        console.log('Persistent browser ready.');
+
+
+        browser.on('disconnected', () => {
+            console.log('⚠ Browser disconnected, reinitializing...');
+            isBrowserReady = false;
+            persistentBrowser = null;
+            setTimeout(() => initializeBrowser(), 2000);
+        });
+
     } catch (error) {
-        console.error('Failed to launch browser:', error);
-        throw error;
+        console.error('❌ Failed to launch browser:', error.message);
+        isBrowserReady = false;
+        persistentBrowser = null;
+
+        setTimeout(() => initializeBrowser(), 5000);
     }
 }
 
@@ -45,16 +61,16 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
     next();
 });
 
-
 app.get('/health', (req, res) => {
-
     if (isBrowserReady) {
         res.status(200).send('OK - Browser Ready');
     } else {
-
         res.status(503).send('Not Ready - Browser Initializing');
     }
 });
@@ -64,7 +80,6 @@ app.get('/screenshot', async (req, res) => {
     if (!url) return res.status(400).json({ error: 'URL parameter required' });
 
     if (!isBrowserReady || !persistentBrowser) {
-
         return res.status(503).json({ error: 'Browser service initializing. Try again shortly.' });
     }
 
@@ -81,6 +96,7 @@ app.get('/screenshot', async (req, res) => {
         await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
         await page.waitForSelector('.ArborCard', { timeout: 10000 });
 
+
         await page.evaluate(() => {
             return Promise.all(
                 Array.from(document.images)
@@ -90,6 +106,7 @@ app.get('/screenshot', async (req, res) => {
                     }))
             );
         });
+
 
         await page.waitForFunction(() => {
             const iframes = document.querySelectorAll('iframe');
@@ -101,6 +118,7 @@ app.get('/screenshot', async (req, res) => {
                 }
             });
         }, { timeout: 20000 }).catch(() => console.log('Iframe timeout, continuing...'));
+
 
         await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -115,15 +133,30 @@ app.get('/screenshot', async (req, res) => {
 
     } catch (error) {
         console.error('Screenshot error:', error);
-        res.status(500).json({ error: 'Failed to generate screenshot' });
+        res.status(500).json({ error: 'Failed to generate screenshot', details: error.message });
     } finally {
-        if (page) await page.close();
+        if (page) {
+            try {
+                await page.close();
+            } catch (e) {
+                console.log('Error closing page:', e.message);
+            }
+        }
     }
 });
 
 
+process.on('unhandledRejection', (error) => {
+    console.error('Unhandled rejection:', error);
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught exception:', error);
+});
+
 app.listen(PORT, () => {
     console.log(`Express server listening on port ${PORT}`);
-
-    initializeBrowser();
+    initializeBrowser().catch(err => {
+        console.error('Initial browser launch failed:', err);
+    });
 });
