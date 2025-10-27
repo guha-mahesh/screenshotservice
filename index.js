@@ -24,7 +24,8 @@ async function launchBrowser() {
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
                 '--disable-gpu',
-                '--disable-dbus'
+                '--disable-dbus',
+                '--single-process'
             ],
             timeout: 60000
         });
