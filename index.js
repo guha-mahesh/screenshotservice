@@ -31,7 +31,8 @@ async function initializeBrowser() {
                 '--disable-gpu',
                 '--disable-dev-tools',
                 '--disable-software-rasterizer',
-                '--disable-extensions'
+                '--disable-extensions',
+                '--disable-dbus'
             ],
             timeout: 90000
         });
