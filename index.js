@@ -55,5 +55,5 @@ app.get('/screenshot', async (req, res) => {
 });
 
 app.listen(PORT, async () => {
-    console.log(`rrunning on port ${port}`)
+    console.log(`running on port ${PORT}`)
 });
