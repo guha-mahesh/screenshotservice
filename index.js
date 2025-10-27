@@ -41,17 +41,13 @@ async function initializeBrowser() {
         persistentBrowser = browser;
         isBrowserReady = true;
 
-        browser.on('disconnected', () => {
-            console.log('⚠ Browser disconnected, reinitializing...');
-            isBrowserReady = false;
-            persistentBrowser = null;
-            setTimeout(() => initializeBrowser(), 2000);
-        });
+
 
     } catch (error) {
         console.error('❌ Failed to launch browser:', error.message);
         isBrowserReady = false;
         persistentBrowser = null;
+
         setTimeout(() => initializeBrowser(), 5000);
     }
 }
