@@ -20,10 +20,15 @@ async function initializeBrowser() {
         const browser = await puppeteer.launch({
             headless: 'new',
             executablePath: '/usr/bin/google-chrome',
+            dumpio: true,  // ADD THIS
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage'
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                '--single-process',  // Critical for Cloud Run
+                '--disable-software-rasterizer',
+                '--disable-dev-tools'
             ],
             timeout: 60000
         });
