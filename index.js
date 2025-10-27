@@ -1,6 +1,6 @@
 import express from 'express';
 import puppeteer from 'puppeteer-core';
-import chromium from 'chrome-aws-lambda';
+
 
 const app = express();
 const PORT = process.env.PORT || 8080;
