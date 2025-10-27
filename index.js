@@ -8,21 +8,14 @@ let browserPromise = null;
 
 async function getBrowser() {
     if (browserPromise) return browserPromise;
-    browserPromise = (async () => {
-        try {
-            const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || await chromium.executablePath;
-            const browser = await puppeteer.launch({
-                args: chromium.args.concat(['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu']),
-                defaultViewport: { width: 1920, height: 1080, deviceScaleFactor: 2 },
-                executablePath,
-                headless: chromium.headless
-            });
-            return browser;
-        } catch {
-            browserPromise = null;
-            return null;
-        }
-    })();
+
+    browserPromise = puppeteer.launch({
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        defaultViewport: { width: 1920, height: 1080, deviceScaleFactor: 2 },
+        executablePath: '/usr/bin/google-chrome-stable',
+        headless: true
+    });
+
     return browserPromise;
 }
 
