@@ -14,15 +14,27 @@ async function initializeBrowser() {
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
-                '--no-zygote'
-            ]
+                '--disable-gpu',
+                '--no-first-run',
+                '--no-zygote',
+                '--single-process',
+                '--disable-extensions',
+                '--disable-background-networking',
+                '--disable-default-apps',
+                '--disable-sync',
+                '--disable-translate',
+                '--hide-scrollbars',
+                '--metrics-recording-only',
+                '--mute-audio',
+                '--safebrowsing-disable-auto-update'
+            ],
+            timeout: 60000
         });
         persistentBrowser = browser;
         isBrowserReady = true;
         console.log('Persistent browser ready.');
     } catch (error) {
         console.error('Failed to launch browser:', error);
-
         throw error;
     }
 }
