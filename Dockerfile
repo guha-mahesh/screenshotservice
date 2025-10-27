@@ -1,6 +1,6 @@
 FROM ghcr.io/puppeteer/puppeteer:latest
 
-USER root  
+USER root
 
 WORKDIR /app
 
@@ -9,6 +9,6 @@ RUN npm install --only=production
 
 COPY . .
 
-USER pptruser
+
 
 CMD ["node", "index.js"]
