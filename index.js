@@ -31,7 +31,6 @@ app.get('/health', async (_, res) => {
     const browser = await getBrowser();
     res.status(browser ? 200 : 503).send(browser ? 'Ready' : 'Starting');
 });
-
 app.get('/screenshot', async (req, res) => {
     const { url } = req.query;
     if (!url) return res.status(400).json({ error: 'URL required' });
@@ -43,11 +42,37 @@ app.get('/screenshot', async (req, res) => {
     try {
         page = await browser.newPage();
         await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
+
+
+        await page.evaluate(() => {
+            return Promise.all(
+                Array.from(document.images)
+                    .filter(img => !img.complete)
+                    .map(img => new Promise(resolve => {
+                        img.addEventListener('load', resolve);
+                        img.addEventListener('error', resolve);
+                    }))
+            );
+        });
+
+
+        await page.waitForSelector('iframe[src*="spotify"]', { timeout: 15000 }).catch(() => { });
+
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
         const element = await page.$('.ArborCard');
         if (!element) return res.status(404).json({ error: 'Element not found' });
-        const png = await element.screenshot({ type: 'png', omitBackground: true });
+
+        const png = await element.screenshot({
+            type: 'png',
+            omitBackground: true,
+            captureBeyondViewport: true
+        });
+
         res.type('png').send(png);
-    } catch {
+    } catch (err) {
+        console.error(err);
         res.status(500).json({ error: 'Screenshot failed' });
     } finally {
         if (page) await page.close().catch(() => { });
