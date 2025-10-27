@@ -8,26 +8,21 @@ let browserPromise = null;
 
 async function getBrowser() {
     if (browserPromise) return browserPromise;
-
-    console.log('Launching Chrome...');
     browserPromise = (async () => {
         try {
-            const executablePath = await chromium.executablePath;
+            const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || await chromium.executablePath;
             const browser = await puppeteer.launch({
-                args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
+                args: chromium.args.concat(['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu']),
                 defaultViewport: { width: 1920, height: 1080, deviceScaleFactor: 2 },
                 executablePath,
                 headless: chromium.headless
             });
-            console.log('✓ Chrome ready');
             return browser;
-        } catch (err) {
-            console.error('Chrome launch failed:', err.message);
+        } catch {
             browserPromise = null;
             return null;
         }
     })();
-
     return browserPromise;
 }
 
@@ -55,14 +50,11 @@ app.get('/screenshot', async (req, res) => {
     try {
         page = await browser.newPage();
         await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
-
         const element = await page.$('.ArborCard');
         if (!element) return res.status(404).json({ error: 'Element not found' });
-
         const png = await element.screenshot({ type: 'png', omitBackground: true });
         res.type('png').send(png);
-    } catch (err) {
-        console.error('Screenshot failed:', err.message);
+    } catch {
         res.status(500).json({ error: 'Screenshot failed' });
     } finally {
         if (page) await page.close().catch(() => { });
@@ -70,6 +62,5 @@ app.get('/screenshot', async (req, res) => {
 });
 
 app.listen(PORT, async () => {
-    console.log(`Server running on port ${PORT}`);
     await getBrowser();
 });
