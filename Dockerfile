@@ -1,6 +1,6 @@
 FROM ghcr.io/puppeteer/puppeteer:latest
 
-USER root  # <-- ADD THIS LINE
+USER root  
 
 WORKDIR /app
 
