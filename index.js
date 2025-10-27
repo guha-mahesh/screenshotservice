@@ -19,22 +19,11 @@ async function initializeBrowser() {
         console.log('=== LAUNCHING BROWSER ===');
         const browser = await puppeteer.launch({
             headless: 'new',
-            dumpio: true,
+            executablePath: '/usr/bin/google-chrome',
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--no-zygote',
-                '--single-process',
-                '--disable-gpu',
-                '--disable-software-rasterizer',
-                '--disable-dev-tools',
-                '--no-first-run',
-                '--disable-background-networking',
-                '--disable-default-apps',
-                '--disable-extensions',
-                '--disable-translate',
-                '--disable-notifications'
+                '--disable-dev-shm-usage'
             ],
             timeout: 60000
         });
