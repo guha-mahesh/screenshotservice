@@ -1,14 +1,13 @@
 FROM ghcr.io/puppeteer/puppeteer:latest
 
-WORKDIR /app
+USER root  # <-- ADD THIS LINE
 
+WORKDIR /app
 
 COPY package*.json ./
 RUN npm install --only=production
 
-
 COPY . .
-
 
 USER pptruser
 
