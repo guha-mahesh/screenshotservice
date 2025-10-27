@@ -55,5 +55,5 @@ app.get('/screenshot', async (req, res) => {
 });
 
 app.listen(PORT, async () => {
-    await getBrowser();
+    console.log(`rrunning on port ${port}`)
 });
