@@ -8,25 +8,24 @@ let isBrowserReady = false;
 
 async function initializeBrowser() {
     try {
+        console.log('=== CHECKING FOR CHROME ===');
+        try {
+            const result = execSync('ls -la /home/pptruser/.cache/puppeteer/ 2>&1 || echo "cache not found"').toString();
+            console.log('Puppeteer cache:', result);
+        } catch (e) {
+            console.log('Cache check failed:', e.message);
+        }
+
+        console.log('=== LAUNCHING BROWSER ===');
         const browser = await puppeteer.launch({
             headless: 'new',
+            dumpio: true,
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
-                '--disable-gpu',
-                '--no-first-run',
                 '--no-zygote',
-                '--single-process',
-                '--disable-extensions',
-                '--disable-background-networking',
-                '--disable-default-apps',
-                '--disable-sync',
-                '--disable-translate',
-                '--hide-scrollbars',
-                '--metrics-recording-only',
-                '--mute-audio',
-                '--safebrowsing-disable-auto-update'
+                '--single-process'
             ],
             timeout: 60000
         });
