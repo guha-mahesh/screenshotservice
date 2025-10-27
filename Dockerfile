@@ -3,7 +3,7 @@ FROM node:18-slim
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 
-
+# Install Chrome and all required dependencies
 RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
@@ -61,7 +61,7 @@ RUN npm ci --only=production
 
 COPY . .
 
-
+# Create non-root user
 RUN groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
     && mkdir -p /home/pptruser/Downloads \
     && chown -R pptruser:pptruser /home/pptruser \

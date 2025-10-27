@@ -40,7 +40,6 @@ async function initializeBrowser() {
         persistentBrowser = browser;
         isBrowserReady = true;
 
-
         browser.on('disconnected', () => {
             console.log('⚠ Browser disconnected, reinitializing...');
             isBrowserReady = false;
@@ -52,7 +51,6 @@ async function initializeBrowser() {
         console.error('❌ Failed to launch browser:', error.message);
         isBrowserReady = false;
         persistentBrowser = null;
-
         setTimeout(() => initializeBrowser(), 5000);
     }
 }
@@ -96,7 +94,6 @@ app.get('/screenshot', async (req, res) => {
         await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
         await page.waitForSelector('.ArborCard', { timeout: 10000 });
 
-
         await page.evaluate(() => {
             return Promise.all(
                 Array.from(document.images)
@@ -106,7 +103,6 @@ app.get('/screenshot', async (req, res) => {
                     }))
             );
         });
-
 
         await page.waitForFunction(() => {
             const iframes = document.querySelectorAll('iframe');
@@ -118,7 +114,6 @@ app.get('/screenshot', async (req, res) => {
                 }
             });
         }, { timeout: 20000 }).catch(() => console.log('Iframe timeout, continuing...'));
-
 
         await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -144,7 +139,6 @@ app.get('/screenshot', async (req, res) => {
         }
     }
 });
-
 
 process.on('unhandledRejection', (error) => {
     console.error('Unhandled rejection:', error);
