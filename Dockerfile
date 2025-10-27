@@ -21,7 +21,8 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm install --omit=dev
+RUN npm ci --omit=dev
+
 COPY . .
 
 RUN groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
