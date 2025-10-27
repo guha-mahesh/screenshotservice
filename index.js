@@ -25,7 +25,16 @@ async function initializeBrowser() {
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
                 '--no-zygote',
-                '--single-process'
+                '--single-process',
+                '--disable-gpu',
+                '--disable-software-rasterizer',
+                '--disable-dev-tools',
+                '--no-first-run',
+                '--disable-background-networking',
+                '--disable-default-apps',
+                '--disable-extensions',
+                '--disable-translate',
+                '--disable-notifications'
             ],
             timeout: 60000
         });
