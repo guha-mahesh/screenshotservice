@@ -59,7 +59,10 @@ app.get('/screenshot', async (req, res) => {
         await page.waitForSelector('iframe[src*="spotify"]', { timeout: 15000 }).catch(() => { });
 
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+
+        await page.waitForNetworkIdle({ timeout: 5000 }).catch(() => { });
 
         const element = await page.$('.ArborCard');
         if (!element) return res.status(404).json({ error: 'Element not found' });
